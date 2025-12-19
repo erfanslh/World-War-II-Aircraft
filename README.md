@@ -6,6 +6,7 @@ A Unity **Android AR** app for exploring **World War II aircraft data** as a **3
 - **AR placement**: place the scatterplot on a detected plane
 - **3D scatterplot** visualization of aircraft stats
 - **Filters**: Country, Role, State
+- **Axis mapping (runtime)**: users can assign any of these fields to X / Y / Z axes: ActiveSince, MaxSpeed, NumberOfBuilt, Wingspan, Length, Crew
 - **Details on tap**: open a card with aircraft stats (and image/model if included)
 
 ## Tech Stack
