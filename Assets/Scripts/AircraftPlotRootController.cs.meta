@@ -1,0 +1,24 @@
+fileFormatVersion: 2
+guid: 3b3d17433df4d784cbf65d4c5816308b
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - dataPointPrefab: {instanceID: 0}
+  - xAxisRenderer: {instanceID: 0}
+  - yAxisRenderer: {instanceID: 0}
+  - zAxisRenderer: {instanceID: 0}
+  - xAxisNameLabel: {instanceID: 0}
+  - xAxisMinLabel: {instanceID: 0}
+  - xAxisMaxLabel: {instanceID: 0}
+  - yAxisNameLabel: {instanceID: 0}
+  - yAxisMinLabel: {instanceID: 0}
+  - yAxisMaxLabel: {instanceID: 0}
+  - zAxisNameLabel: {instanceID: 0}
+  - zAxisMinLabel: {instanceID: 0}
+  - zAxisMaxLabel: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
