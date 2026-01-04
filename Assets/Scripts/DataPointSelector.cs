@@ -6,6 +6,7 @@ public class DataPointSelector : MonoBehaviour
     public GameObject detailCardPrefab;
 
     private AircraftDetailCard _currentCard;
+    private AircraftDataPoint _currentPoint;
 
     private bool _selectionEnabled = false;
 
@@ -53,6 +54,7 @@ public class DataPointSelector : MonoBehaviour
             var dataPoint = hit.collider.GetComponentInParent<AircraftDataPoint>();
             if (dataPoint != null && dataPoint.record != null)
             {
+                SelectPoint(dataPoint); // Highlight(Pulse) the selected cube
                 ShowDetails(dataPoint, hit.point, hit.normal);
             }
         }
@@ -96,6 +98,31 @@ public class DataPointSelector : MonoBehaviour
         else
         {
             Debug.LogWarning("[DataPointSelector] DetailCard prefab is missing AircraftDetailCard component.");
+        }
+    }
+
+    private void SelectPoint(AircraftDataPoint point)
+    {
+        // Turn off previous highlight
+        if (_currentPoint != null && _currentPoint != point)
+        {
+            _currentPoint.SetHighlighted(false);
+        }
+
+        _currentPoint = point;
+
+        if (_currentPoint != null)
+        {
+            _currentPoint.SetHighlighted(true);
+        }
+    }
+    // Clear Highlight when disabled
+    private void OnDisable()
+    {
+        if (_currentPoint != null)
+        {
+            _currentPoint.SetHighlighted(false);
+            _currentPoint = null;
         }
     }
 }
