@@ -29,13 +29,31 @@ public class AircraftDetailCard : MonoBehaviour
     public Button closeButton;      
 
     private GameObject _spawnedModel;
-    private Camera _camera;
+    private Camera _camera; 
+    private Canvas _canvas;           // world-space canvas on this prefab
+
+
+    private void Awake()
+    {
+        // cache the card’s canvas
+        _canvas = GetComponentInChildren<Canvas>();
+
+        if (closeButton != null)
+            closeButton.onClick.AddListener(Close);
+    }
 
     public void Setup(AircraftRecord r, Camera cam)
     {
         if (r == null) return;
 
-        _camera = cam;
+        // store camera reference
+        _camera = cam != null ? cam : Camera.main;
+
+        // hook the world-space canvas to the camera
+        if (_canvas != null && _canvas.renderMode == RenderMode.WorldSpace)
+        {
+            _canvas.worldCamera = _camera;
+        }
 
         // ----- Text fields -----
         if (nameText) nameText.text = r.Name;
@@ -53,7 +71,7 @@ public class AircraftDetailCard : MonoBehaviour
         if (heightText) heightText.text = r.Height.ToString("0.00");
         if (wingAreaText) wingAreaText.text = r.WingArea.ToString("0.00");
         if (maxSpeedText) maxSpeedText.text = r.MaxSpeed.ToString("0");
-
+        //2D Image
         if (previewImage != null)
         {
             var sprite = Resources.Load<Sprite>("AircraftImages/" + r.Name);
@@ -67,7 +85,7 @@ public class AircraftDetailCard : MonoBehaviour
                 previewImage.enabled = false;
             }
         }
-
+        //3D Model
         if (modelAnchor != null)
         {
             if (_spawnedModel != null)
@@ -86,12 +104,6 @@ public class AircraftDetailCard : MonoBehaviour
         }
     }
 
-    private void Awake()
-    {
-        if (closeButton != null)
-            closeButton.onClick.AddListener(Close);
-    }
-
     private void LateUpdate()
     {
         if (_camera == null) return;
@@ -104,6 +116,8 @@ public class AircraftDetailCard : MonoBehaviour
 
     public void Close()
     {
+        //Check for Debug
+        Debug.Log("[AircraftDetailCard] Close pressed");
         Destroy(gameObject);
     }
 }

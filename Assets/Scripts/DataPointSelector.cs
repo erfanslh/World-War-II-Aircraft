@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class DataPointSelector : MonoBehaviour
 {
@@ -20,30 +21,43 @@ public class DataPointSelector : MonoBehaviour
     {
         _selectionEnabled = true;
     }
-
     private void Update()
     {
         if (!_selectionEnabled)
             return;
 
 #if UNITY_EDITOR
-        // in Editor 
+        // Mouse click in Editor
         if (Input.GetMouseButtonDown(0))
         {
+            // Ignore clicks that start over UI (close button, dropdowns, etc.)
+            if (EventSystem.current != null &&
+                EventSystem.current.IsPointerOverGameObject())
+            {
+                return;
+            }
+
             Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
             HandleRay(ray);
         }
 #else
-        // on Device
-        if (Input.touchCount > 0)
+    // Touch on device
+    if (Input.touchCount > 0)
+    {
+        var touch = Input.GetTouch(0);
+        if (touch.phase == TouchPhase.Began)
         {
-            var touch = Input.GetTouch(0);
-            if (touch.phase == TouchPhase.Began)
+            // Ignore touches that start over UI
+            if (EventSystem.current != null &&
+                EventSystem.current.IsPointerOverGameObject(touch.fingerId))
             {
-                Ray ray = mainCamera.ScreenPointToRay(touch.position);
-                HandleRay(ray);
+                return;
             }
+
+            Ray ray = mainCamera.ScreenPointToRay(touch.position);
+            HandleRay(ray);
         }
+    }
 #endif
     }
 
