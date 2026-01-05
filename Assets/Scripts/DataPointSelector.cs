@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class DataPointSelector : MonoBehaviour
@@ -6,8 +7,8 @@ public class DataPointSelector : MonoBehaviour
     public Camera mainCamera;
     public GameObject detailCardPrefab;
 
-    private AircraftDetailCard _currentCard;
-    private AircraftDataPoint _currentPoint;
+    private readonly Dictionary<AircraftDataPoint, AircraftDetailCard> _openCards =
+            new Dictionary<AircraftDataPoint, AircraftDetailCard>();
 
     private bool _selectionEnabled = false;
 
@@ -30,13 +31,6 @@ public class DataPointSelector : MonoBehaviour
         // Mouse click in Editor
         if (Input.GetMouseButtonDown(0))
         {
-            // Ignore clicks that start over UI (close button, dropdowns, etc.)
-            if (EventSystem.current != null &&
-                EventSystem.current.IsPointerOverGameObject())
-            {
-                return;
-            }
-
             Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
             HandleRay(ray);
         }
@@ -47,13 +41,6 @@ public class DataPointSelector : MonoBehaviour
         var touch = Input.GetTouch(0);
         if (touch.phase == TouchPhase.Began)
         {
-            // Ignore touches that start over UI
-            if (EventSystem.current != null &&
-                EventSystem.current.IsPointerOverGameObject(touch.fingerId))
-            {
-                return;
-            }
-
             Ray ray = mainCamera.ScreenPointToRay(touch.position);
             HandleRay(ray);
         }
@@ -68,22 +55,45 @@ public class DataPointSelector : MonoBehaviour
             var dataPoint = hit.collider.GetComponentInParent<AircraftDataPoint>();
             if (dataPoint != null && dataPoint.record != null)
             {
-                SelectPoint(dataPoint); // Highlight(Pulse) the selected cube
-                ShowDetails(dataPoint, hit.point, hit.normal);
+                ToggleSelection(dataPoint, hit.point, hit.normal);
             }
         }
     }
+    #region ToggleSelection Logic[multiple selection Card]
+    // If this point is already selected, unselect it (remove highlight + close card).
+    // If not selected yet, highlight it and spawn a new detail card.
 
-    private void ShowDetails(AircraftDataPoint point, Vector3 hitPos, Vector3 hitNormal)
+    private void ToggleSelection(AircraftDataPoint point, Vector3 hitPos, Vector3 hitNormal)
+    {
+        // already have a card for this point -> close it (unselect)
+        if (_openCards.TryGetValue(point, out var existingCard) && existingCard != null)
+        {
+            Debug.Log("[DataPointSelector] Toggling OFF selection: " + point.record.Name);
+
+            point.SetHighlighted(false);
+            Destroy(existingCard.gameObject);
+            _openCards.Remove(point);
+            return;
+        }
+
+        //NewSelection
+        Debug.Log("[DataPointSelector] Toggling ON selection: " + point.record.Name);
+
+        point.SetHighlighted(true);
+        var newCard = CreateCard(point, hitPos, hitNormal);
+        if (newCard != null)
+        {
+            _openCards[point] = newCard;
+        }
+    }
+    #endregion
+    private AircraftDetailCard CreateCard(AircraftDataPoint point, Vector3 hitPos, Vector3 hitNormal)
     {
         if (detailCardPrefab == null)
         {
             Debug.LogWarning("[DataPointSelector] No DetailCard prefab assigned.");
-            return;
+            return null;
         }
-
-        if (_currentCard != null)
-            Destroy(_currentCard.gameObject);
 
         var camTransform = mainCamera != null ? mainCamera.transform : Camera.main.transform;
 
@@ -104,39 +114,35 @@ public class DataPointSelector : MonoBehaviour
 
         cardGO.transform.rotation = Quaternion.LookRotation(forwardOnSurface, hitNormal);
 
-        _currentCard = cardGO.GetComponent<AircraftDetailCard>();
-        if (_currentCard != null)
+        var card = cardGO.GetComponent<AircraftDetailCard>();
+        if (card != null)
         {
-            _currentCard.Setup(point.record, mainCamera);
+            card.Setup(point.record, mainCamera);
         }
         else
         {
             Debug.LogWarning("[DataPointSelector] DetailCard prefab is missing AircraftDetailCard component.");
         }
+
+        return card;
     }
 
-    private void SelectPoint(AircraftDataPoint point)
-    {
-        // Turn off previous highlight
-        if (_currentPoint != null && _currentPoint != point)
-        {
-            _currentPoint.SetHighlighted(false);
-        }
-
-        _currentPoint = point;
-
-        if (_currentPoint != null)
-        {
-            _currentPoint.SetHighlighted(true);
-        }
-    }
     // Clear Highlight when disabled
     private void OnDisable()
     {
-        if (_currentPoint != null)
+        // clean up highlights & cards if selector gets disabled
+        foreach (var kvp in _openCards)
         {
-            _currentPoint.SetHighlighted(false);
-            _currentPoint = null;
+            var point = kvp.Key;
+            var card = kvp.Value;
+
+            if (point != null)
+                point.SetHighlighted(false);
+
+            if (card != null)
+                Destroy(card.gameObject);
         }
+
+        _openCards.Clear();
     }
 }
