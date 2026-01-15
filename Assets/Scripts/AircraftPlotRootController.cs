@@ -206,9 +206,13 @@ public class AircraftPlotRootController : MonoBehaviour
             return;
         }
 
-        GetMinMax(filtered, xAttr, out float minX, out float maxX);
-        GetMinMax(filtered, yAttr, out float minY, out float maxY);
-        GetMinMax(filtered, zAttr, out float minZ, out float maxZ);
+        if (!TryGetMinMax(filtered, xAttr, out float minX, out float maxX) ||
+        !TryGetMinMax(filtered, yAttr, out float minY, out float maxY) ||
+        !TryGetMinMax(filtered, zAttr, out float minZ, out float maxZ))
+        {
+            Debug.LogWarning("[AircraftPlotRootController] BuildPlot: one axis had no valid (>0) data.");
+            return;
+        }
 
         // labels get REAL min/max
         UpdateAxisLabels(xAttr, yAttr, zAttr, minX, maxX, minY, maxY, minZ, maxZ);
@@ -230,6 +234,10 @@ public class AircraftPlotRootController : MonoBehaviour
             float xVal = GetValue(rec, xAttr);
             float yVal = GetValue(rec, yAttr);
             float zVal = GetValue(rec, zAttr);
+
+            // skip records that have missing values on ANY axis
+            if (xVal <= 0f || yVal <= 0f || zVal <= 0f)
+                continue;
 
             float tX = Mathf.InverseLerp(minXPadded, maxXPadded, xVal);
             float tY = Mathf.InverseLerp(minYPadded, maxYPadded, yVal);
@@ -281,28 +289,59 @@ public class AircraftPlotRootController : MonoBehaviour
         }
     }
 
-    private static void GetMinMax(
-        List<AircraftRecord> recs,
+    // Returns false if it found Null Value.
+    private bool TryGetMinMax(
+        List<AircraftRecord> records,
         NumericAttribute attr,
-        out float min, out float max)
+        out float min,
+        out float max)
     {
         min = float.PositiveInfinity;
         max = float.NegativeInfinity;
 
-        foreach (var r in recs)
+        foreach (var r in records)
         {
             float v = GetValue(r, attr);
+
+            // Skipping null value and not consider them in the Axes
+            if (v <= 0f)
+                continue;
+
             if (v < min) min = v;
             if (v > max) max = v;
         }
 
+        // If still Infinity, there were no valid (>0) values for this axis.
         if (float.IsInfinity(min) || float.IsInfinity(max))
-        {
-            min = 0f;
-            max = 1f;
-        }
+            return false;
+
+        return true;
     }
 
+
+    #region Old MinMax
+    //private static void GetMinMax(
+    //    List<AircraftRecord> recs,
+    //    NumericAttribute attr,
+    //    out float min, out float max)
+    //{
+    //    min = float.PositiveInfinity;
+    //    max = float.NegativeInfinity;
+
+    //    foreach (var r in recs)
+    //    {
+    //        float v = GetValue(r, attr);
+    //        if (v < min) min = v;
+    //        if (v > max) max = v;
+    //    }
+
+    //    if (float.IsInfinity(min) || float.IsInfinity(max))
+    //    {
+    //        min = 0f;
+    //        max = 1f;
+    //    }
+    //}
+    #endregion
     #region  Filters
 
     private bool PassesFilters(AircraftRecord rec)

@@ -4250,9 +4250,21 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 111620637}
     - target: {fileID: 7605746677218187072, guid: d2b6d4124e1bfd54cb6adc22f1f0565c, type: 3}
+      propertyPath: cardsPerRow
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7605746677218187072, guid: d2b6d4124e1bfd54cb6adc22f1f0565c, type: 3}
       propertyPath: detailCardPrefab
       value: 
       objectReference: {fileID: 6310052766599421821, guid: eaafa9cdc63a65349bd93e64f88d2f26, type: 3}
+    - target: {fileID: 7605746677218187072, guid: d2b6d4124e1bfd54cb6adc22f1f0565c, type: 3}
+      propertyPath: cardVerticalSpacing
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7605746677218187072, guid: d2b6d4124e1bfd54cb6adc22f1f0565c, type: 3}
+      propertyPath: cardHorizontalSpacing
+      value: 0.35
+      objectReference: {fileID: 0}
     - target: {fileID: 8939974982602946713, guid: d2b6d4124e1bfd54cb6adc22f1f0565c, type: 3}
       propertyPath: m_LocalPosition.x
       value: 286.97333
