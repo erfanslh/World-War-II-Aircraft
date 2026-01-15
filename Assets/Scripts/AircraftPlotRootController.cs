@@ -23,6 +23,22 @@ public class AircraftPlotRootController : MonoBehaviour
     private Dictionary<string, Material> _countryFlagMap = new();
 
     #endregion
+
+    #region 12-tick-axis
+
+    [Header("Axis ticks")]
+    public GameObject axisTickPrefab;   // small cube for tick marks
+    public TMP_Text axisLabelPrefab;    // 3D TMP text prefab for tick values
+    public int axisSections = 12;       // how many divisions per axis
+
+    public Camera axisLabelCamera;      // usually your AR Main Camera
+
+    private readonly List<GameObject> _spawnedAxisTicks = new();
+    private readonly List<GameObject> _spawnedAxisLabels = new();
+
+
+    #endregion
+
     public static AircraftPlotRootController Instance { get; private set; }
 
     [Header("Data")]
@@ -92,6 +108,8 @@ public class AircraftPlotRootController : MonoBehaviour
         BuildCountryFlagMap();
         ApplyAxisColors();
     }
+
+
     private void BuildCountryFlagMap()
     {
         _countryFlagMap.Clear();
@@ -113,6 +131,29 @@ public class AircraftPlotRootController : MonoBehaviour
 
         Debug.Log($"[AircraftPlotRootController] Country flag materials loaded: {_countryFlagMap.Count}");
     }
+
+    private string FormatAxisNumber(NumericAttribute attr, float value)
+    {
+        switch (attr)
+        {
+            // These are "integer-like" in your dataset
+            case NumericAttribute.ActiveSince:
+            case NumericAttribute.Number:
+            case NumericAttribute.Crew:
+            case NumericAttribute.MaxSpeed:
+                return Mathf.RoundToInt(value).ToString("0");
+
+            // These have decimals but we can show 1 decimal place
+            case NumericAttribute.Wingspan:
+            case NumericAttribute.Length:
+                return value.ToString("0.0");
+
+            default:
+                return value.ToString("0.##");
+        }
+    }
+
+
     private Material GetFlagMaterialForCountry(string country)
     {
         if (string.IsNullOrWhiteSpace(country))
@@ -216,6 +257,9 @@ public class AircraftPlotRootController : MonoBehaviour
 
         // labels get REAL min/max
         UpdateAxisLabels(xAttr, yAttr, zAttr, minX, maxX, minY, maxY, minZ, maxZ);
+
+        // build tick marks along the axes, based on these min/max values
+        RebuildAxisTicks(minX, maxX, minY, maxY, minZ, maxZ);
 
         // padded range just for positions
         float padX = (maxX - minX) * 0.05f;
@@ -396,6 +440,115 @@ public class AircraftPlotRootController : MonoBehaviour
         if (zAxisRenderer != null) zAxisRenderer.material.color = zAxisColor;
     }
 
+    #region Tick-Logic
+    private void RebuildAxisTicks(
+    float minX, float maxX,
+    float minY, float maxY,
+    float minZ, float maxZ)
+    {
+        ClearAxisTicksAndLabels();
+
+        if (axisSections < 2 || axisTickPrefab == null)
+            return;
+
+        // We assume the plot spans [0,width], [0,height], [0,depth] in local space.
+        float sectionsMinusOne = axisSections - 1;
+
+        for (int i = 0; i < axisSections; i++)
+        {
+            float t = i / sectionsMinusOne;
+
+            // X axis – along +X on the floor
+            Vector3 xPos = new Vector3(t * width, 0f, 0f);
+            float xVal = Mathf.Lerp(minX, maxX, t);
+            CreateAxisTickWithLabel(xPos, AxisType.X, xVal);
+
+            // Y axis – vertical
+            Vector3 yPos = new Vector3(0f, t * height, 0f);
+            float yVal = Mathf.Lerp(minY, maxY, t);
+            CreateAxisTickWithLabel(yPos, AxisType.Y, yVal);
+
+            // Z axis – along +Z on the floor
+            Vector3 zPos = new Vector3(0f, 0f, t * depth);
+            float zVal = Mathf.Lerp(minZ, maxZ, t);
+            CreateAxisTickWithLabel(zPos, AxisType.Z, zVal);
+        }
+    }
+
+    // Format axis numbers
+    private string FormatAxisNumber(float value)
+    {
+        // Round to nearest whole number, no decimals
+        return Mathf.Round(value).ToString("0");
+    }
+
+    // Clear old ticks/labels before rebuilding
+    private void ClearAxisTicksAndLabels()
+    {
+        foreach (var t in _spawnedAxisTicks)
+            if (t != null) Destroy(t);
+        _spawnedAxisTicks.Clear();
+
+        foreach (var l in _spawnedAxisLabels)
+            if (l != null) Destroy(l);
+        _spawnedAxisLabels.Clear();
+    }
+    private enum AxisType { X, Y, Z }
+
+    // Creates one tick + label at given local position for a single axis
+    private void CreateAxisTickWithLabel(Vector3 localPos, AxisType axis, float rawValue)
+    {
+        if (axisTickPrefab == null) return;
+
+        // ---- Tick cube ----
+        var tickGO = Instantiate(axisTickPrefab, transform);
+        tickGO.transform.localPosition = localPos;
+
+        // A small vertical “post”
+        tickGO.transform.localScale = new Vector3(0.01f, 0.05f, 0.01f);
+
+        // Offset so ticks don’t hide inside axes/floor
+        Vector3 labelOffset;
+        switch (axis)
+        {
+            case AxisType.X:
+                tickGO.transform.localPosition += new Vector3(0f, 0.01f, 0f);  // a bit above floor
+                labelOffset = new Vector3(0f, 0.03f, 0f);
+                break;
+
+            case AxisType.Y:
+                tickGO.transform.localPosition += new Vector3(0.02f, 0f, 0f);   // stick out in +X
+                labelOffset = new Vector3(0.04f, 0f, 0f);
+                break;
+
+            default: // Z
+                tickGO.transform.localPosition += new Vector3(0f, 0.01f, 0f);
+                labelOffset = new Vector3(0f, 0.03f, 0f);
+                break;
+        }
+
+        _spawnedAxisTicks.Add(tickGO);
+
+        // ---- Numeric label ----
+        if (axisLabelPrefab == null) return;
+
+        TMP_Text label = Instantiate(axisLabelPrefab, transform);
+        label.text = FormatAxisNumber(rawValue);
+        label.transform.localPosition = tickGO.transform.localPosition + labelOffset;
+
+        // Make label face the camera
+        Camera cam = axisLabelCamera != null ? axisLabelCamera : Camera.main;
+        if (cam != null)
+        {
+            label.transform.LookAt(cam.transform);
+            label.transform.Rotate(0f, 180f, 0f, Space.Self);
+        }
+
+        _spawnedAxisLabels.Add(label.gameObject);
+    }
+
+    #endregion
+
     private void UpdateAxisLabels(
     NumericAttribute xAttr, NumericAttribute yAttr, NumericAttribute zAttr,
     float minX, float maxX,
@@ -411,15 +564,26 @@ public class AircraftPlotRootController : MonoBehaviour
         if (yAxisNameLabel != null) yAxisNameLabel.text = yName;
         if (zAxisNameLabel != null) zAxisNameLabel.text = zName;
 
+        #region OldColde
         // Min / Max numbers at ends of each axis
-        if (xAxisMinLabel != null) xAxisMinLabel.text = $"{minX:0.#}";
-        if (xAxisMaxLabel != null) xAxisMaxLabel.text = $"{maxX:0.#}";
+        //if (xAxisMinLabel != null) xAxisMinLabel.text = $"{minX:0.#}";
+        //if (xAxisMaxLabel != null) xAxisMaxLabel.text = $"{maxX:0.#}";
 
-        if (yAxisMinLabel != null) yAxisMinLabel.text = $"{minY:0.#}";
-        if (yAxisMaxLabel != null) yAxisMaxLabel.text = $"{maxY:0.#}";
+        //if (yAxisMinLabel != null) yAxisMinLabel.text = $"{minY:0.#}";
+        //if (yAxisMaxLabel != null) yAxisMaxLabel.text = $"{maxY:0.#}";
 
-        if (zAxisMinLabel != null) zAxisMinLabel.text = $"{minZ:0.#}";
-        if (zAxisMaxLabel != null) zAxisMaxLabel.text = $"{maxZ:0.#}";
+        //if (zAxisMinLabel != null) zAxisMinLabel.text = $"{minZ:0.#}";
+        //if (zAxisMaxLabel != null) zAxisMaxLabel.text = $"{maxZ:0.#}";
+        #endregion
+        if (xAxisMinLabel) xAxisMinLabel.text = FormatAxisNumber(xAttr, minX);
+        if (xAxisMaxLabel) xAxisMaxLabel.text = FormatAxisNumber(xAttr, maxX);
+
+        if (yAxisMinLabel) yAxisMinLabel.text = FormatAxisNumber(yAttr, minY);
+        if (yAxisMaxLabel) yAxisMaxLabel.text = FormatAxisNumber(yAttr, maxY);
+
+        if (zAxisMinLabel) zAxisMinLabel.text = FormatAxisNumber(zAttr, minZ);
+        if (zAxisMaxLabel) zAxisMaxLabel.text = FormatAxisNumber(zAttr, maxZ);
+
     }
 
 
