@@ -32,6 +32,14 @@ public class AircraftDetailCard : MonoBehaviour
     private Camera _camera; 
     private Canvas _canvas;           // world-space canvas on this prefab
 
+    private AircraftDataPoint _ownerPoint;
+    private DataPointSelector _selector;
+
+    public void Initialize(AircraftDataPoint ownerPoint, DataPointSelector selector)
+    {
+        _ownerPoint = ownerPoint;
+        _selector = selector;
+    }
 
     private void Awake()
     {
@@ -116,8 +124,12 @@ public class AircraftDetailCard : MonoBehaviour
 
     public void Close()
     {
-        //Check for Debug
-        Debug.Log("[AircraftDetailCard] Close pressed");
+        // tell selector that this card is closing so it can stop breathing
+        if (_selector != null && _ownerPoint != null)
+        {
+            _selector.OnCardClosed(this, _ownerPoint);
+        }
+
         Destroy(gameObject);
     }
 }
