@@ -1917,6 +1917,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   objectToPlace: {fileID: 1391642103748615053, guid: 77d279bda1c299e4494747123f4d94e3, type: 3}
+  planeManager: {fileID: 151853166}
+  scanningUI: {fileID: 0}
   longPressDuration: 2
   maxTapMove: 15
 --- !u!1 &163156115

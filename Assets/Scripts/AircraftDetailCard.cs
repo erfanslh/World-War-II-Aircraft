@@ -23,7 +23,8 @@ public class AircraftDetailCard : MonoBehaviour
 
     [Header("Visuals")]
     public Image previewImage;     
-    public Transform modelAnchor;   
+    public Transform modelAnchor; 
+    public Image countryFlagRenderer;
 
     [Header("Controls")]
     public Button closeButton;      
@@ -57,21 +58,101 @@ public class AircraftDetailCard : MonoBehaviour
         if (closeButton != null)
             closeButton.onClick.AddListener(Close);
     }
+    #region oldsetup
+    //public void Setup(AircraftRecord r, Camera cam)
+    //{
+    //    if (r == null) return;
+
+    //    // store camera reference
+    //    _camera = cam != null ? cam : Camera.main;
+
+    //    // hook the world-space canvas to the camera
+    //    if (_canvas != null && _canvas.renderMode == RenderMode.WorldSpace)
+    //    {
+    //        _canvas.worldCamera = _camera;
+    //    }
+
+    //    // ----- Text fields -----
+    //    if (nameText) nameText.text = r.Name;
+    //    if (roleText) roleText.text = r.PrimaryRole;
+    //    if (manufacturerText) manufacturerText.text = r.Manufacturer;
+    //    if (countryText) countryText.text = r.Country;
+    //    if (numberText) numberText.text = r.Number.ToString("0");
+    //    if (activeSinceText) activeSinceText.text = r.ActiveSince.ToString("0");
+    //    if (lastBuiltText) lastBuiltText.text = r.LastBuilt.ToString("0");
+    //    if (retiredText) retiredText.text = r.Retired.ToString("0");
+    //    if (stateText) stateText.text = r.State;
+    //    if (crewText) crewText.text = r.Crew.ToString("0");
+    //    if (lengthText) lengthText.text = r.Length.ToString("0.0");
+    //    if (wingspanText) wingspanText.text = r.Wingspan.ToString("0.0");
+    //    if (heightText) heightText.text = r.Height.ToString("0.00");
+    //    if (wingAreaText) wingAreaText.text = r.WingArea.ToString("0.00");
+    //    if (maxSpeedText) maxSpeedText.text = r.MaxSpeed.ToString("0");
+    //    //2D Image
+    //    if (previewImage != null)
+    //    {
+    //        var sprite = Resources.Load<Sprite>("AircraftImages/" + r.Name);
+    //        if (sprite != null)
+    //        {
+    //            previewImage.sprite = sprite;
+    //            previewImage.enabled = true;
+    //        }
+    //        else
+    //        {
+    //            previewImage.enabled = false;
+    //        }
+    //    }
+    //    // ----- Country flag behind the model -----
+    //    if (countryFlagRenderer != null)
+    //    {
+    //        var controller = AircraftPlotRootController.Instance;
+    //        if (controller != null)
+    //        {
+    //            Material flagMat = controller.GetFlagMaterialForCountry(r.Country);
+    //            if (flagMat != null)
+    //            {
+    //                // You can use material or sharedMaterial; material = instance, sharedMaterial = shared
+    //                countryFlagRenderer.material = flagMat;
+    //                countryFlagRenderer.gameObject.SetActive(true);
+    //            }
+    //            else
+    //            {
+    //                countryFlagRenderer.gameObject.SetActive(false);
+    //            }
+    //        }
+    //        else
+    //        {
+    //            countryFlagRenderer.gameObject.SetActive(false);
+    //        }
+    //    }
+    //    //3D Model
+    //    if (modelAnchor != null)
+    //    {
+    //        if (_spawnedModel != null)
+    //            Destroy(_spawnedModel);
+
+    //        GameObject modelPrefab =
+    //            Resources.Load<GameObject>("AircraftModels/" + r.Name);
+
+    //        if (modelPrefab != null)
+    //        {
+    //            _spawnedModel = Instantiate(modelPrefab, modelAnchor);
+    //            _spawnedModel.transform.localPosition = Vector3.zero;
+    //            _spawnedModel.transform.localRotation = Quaternion.identity;
+    //            _spawnedModel.transform.localScale = Vector3.one;
+    //        }
+    //    }
+
+    //}
+    #endregion
 
     public void Setup(AircraftRecord r, Camera cam)
     {
         if (r == null) return;
 
-        // store camera reference
-        _camera = cam != null ? cam : Camera.main;
+        _camera = cam;
 
-        // hook the world-space canvas to the camera
-        if (_canvas != null && _canvas.renderMode == RenderMode.WorldSpace)
-        {
-            _canvas.worldCamera = _camera;
-        }
-
-        // ----- Text fields -----
+        // ----- Text fields (already have this) -----
         if (nameText) nameText.text = r.Name;
         if (roleText) roleText.text = r.PrimaryRole;
         if (manufacturerText) manufacturerText.text = r.Manufacturer;
@@ -87,7 +168,8 @@ public class AircraftDetailCard : MonoBehaviour
         if (heightText) heightText.text = r.Height.ToString("0.00");
         if (wingAreaText) wingAreaText.text = r.WingArea.ToString("0.00");
         if (maxSpeedText) maxSpeedText.text = r.MaxSpeed.ToString("0");
-        //2D Image
+
+        // ----- 2D aircraft image (your existing logic) -----
         if (previewImage != null)
         {
             var sprite = Resources.Load<Sprite>("AircraftImages/" + r.Name);
@@ -101,7 +183,36 @@ public class AircraftDetailCard : MonoBehaviour
                 previewImage.enabled = false;
             }
         }
-        //3D Model
+
+        // ----- COUNTRY FLAG BEHIND MODEL (NEW) -----
+        if (countryFlagRenderer != null)
+        {
+            var controller = AircraftPlotRootController.Instance;
+            if (controller != null)
+            {
+                // reuse the same function as cubes
+                Material flagMat = controller.GetFlagMaterialForCountry(r.Country);
+
+                Debug.Log($"[DetailCard] Country={r.Country}, flagMat={(flagMat ? flagMat.name : "null")}");
+
+                if (flagMat != null)
+                {
+                    countryFlagRenderer.material = flagMat;
+                    countryFlagRenderer.gameObject.SetActive(true);
+                }
+                else
+                {
+                    countryFlagRenderer.gameObject.SetActive(false);
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[DetailCard] No AircraftPlotRootController.Instance; cannot get flag material.");
+                countryFlagRenderer.gameObject.SetActive(false);
+            }
+        }
+
+        // ----- 3D MODEL -----
         if (modelAnchor != null)
         {
             if (_spawnedModel != null)
@@ -119,6 +230,7 @@ public class AircraftDetailCard : MonoBehaviour
             }
         }
     }
+
 
     private void LateUpdate()
     {

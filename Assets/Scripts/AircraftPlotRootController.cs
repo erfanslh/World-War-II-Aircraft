@@ -154,7 +154,7 @@ public class AircraftPlotRootController : MonoBehaviour
     }
 
 
-    private Material GetFlagMaterialForCountry(string country)
+    public Material GetFlagMaterialForCountry(string country)
     {
         if (string.IsNullOrWhiteSpace(country))
             return defaultFlagMaterial;
@@ -363,29 +363,6 @@ public class AircraftPlotRootController : MonoBehaviour
     }
 
 
-    #region Old MinMax
-    //private static void GetMinMax(
-    //    List<AircraftRecord> recs,
-    //    NumericAttribute attr,
-    //    out float min, out float max)
-    //{
-    //    min = float.PositiveInfinity;
-    //    max = float.NegativeInfinity;
-
-    //    foreach (var r in recs)
-    //    {
-    //        float v = GetValue(r, attr);
-    //        if (v < min) min = v;
-    //        if (v > max) max = v;
-    //    }
-
-    //    if (float.IsInfinity(min) || float.IsInfinity(max))
-    //    {
-    //        min = 0f;
-    //        max = 1f;
-    //    }
-    //}
-    #endregion
     #region  Filters
 
     private bool PassesFilters(AircraftRecord rec)
