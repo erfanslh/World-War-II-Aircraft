@@ -12,6 +12,10 @@ public class TapToPlaceRoot : MonoBehaviour
     [Tooltip("Prefab that contains your visualization root")]
     public GameObject objectToPlace;
 
+    [Header("Plane / Scanning visuals")]
+    public ARPlaneManager planeManager;      // drag from XR Origin
+    public GameObject scanningUI;           // optional overlay / text
+
     private ARRaycastManager _raycastManager;
     private static readonly List<ARRaycastHit> Hits = new();
 
@@ -35,6 +39,9 @@ public class TapToPlaceRoot : MonoBehaviour
     private void Awake()
     {
         _raycastManager = GetComponent<ARRaycastManager>();
+
+        if (planeManager == null)
+            planeManager = GetComponent<ARPlaneManager>();
     }
 
     private void Update()
@@ -154,15 +161,38 @@ public class TapToPlaceRoot : MonoBehaviour
         {
             Pose hitPose = Hits[0].pose;
             if (_spawnedObject == null)
-{
-    _spawnedObject = Instantiate(objectToPlace, hitPose.position, hitPose.rotation);
-    Debug.Log("[TapToPlaceRoot] Plot spawned at " + hitPose.position);
+            {
+                _spawnedObject = Instantiate(objectToPlace, hitPose.position, hitPose.rotation);
+                Debug.Log("[TapToPlaceRoot] Plot spawned at " + hitPose.position);
 
-        //make Cubes selectable after spawning
-        StartCoroutine(EnableSelectionNextFrame());
-}
+                //make Cubes selectable after spawning
+                 StartCoroutine(EnableSelectionNextFrame());
+                DisableScanningVisuals();
+            }
 
         }
+    }
+    //Method for disable Scanning surface
+    private void DisableScanningVisuals()
+    {
+        // Hide extra overlay (e.g. "Move your device" panel)
+        if (scanningUI != null)
+            scanningUI.SetActive(false);
+
+        if (planeManager == null)
+            return;
+
+        // Hide all currently detected plane GameObjects
+        foreach (var plane in planeManager.trackables)
+        {
+            plane.gameObject.SetActive(false);
+        }
+
+        // Option A: completely stop plane updates (no more scanning)
+        planeManager.enabled = false;
+
+        // If later you decide you still want plane updates for some reason,
+        // comment out the line above and only keep the plane meshes disabled.
     }
 
     private void MoveRootTo(Vector2 screenPosition)

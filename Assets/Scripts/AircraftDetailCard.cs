@@ -32,6 +32,10 @@ public class AircraftDetailCard : MonoBehaviour
     private Camera _camera; 
     private Canvas _canvas;           // world-space canvas on this prefab
 
+    [Header("Link to selected cube")]
+    [SerializeField] private LineRenderer linkLine;   // line object on the card
+    [SerializeField] private Transform linkAnchor;    // where the line starts on the card
+
     private AircraftDataPoint _ownerPoint;
     private DataPointSelector _selector;
 
@@ -39,6 +43,10 @@ public class AircraftDetailCard : MonoBehaviour
     {
         _ownerPoint = ownerPoint;
         _selector = selector;
+
+        // make sure line is enabled only if we have a point
+        if (linkLine != null)
+            linkLine.enabled = (_ownerPoint != null);
     }
 
     private void Awake()
@@ -120,6 +128,24 @@ public class AircraftDetailCard : MonoBehaviour
         Transform camT = _camera.transform;
         transform.LookAt(camT.position, Vector3.up);
         transform.Rotate(0f, 180f, 0f, Space.Self);
+
+        // --- update line to the cube ---
+        if (linkLine != null && _ownerPoint != null)
+        {
+            // start of line: card anchor (or card root if not set)
+            Vector3 startPos = linkAnchor != null ? linkAnchor.position : transform.position;
+            // end of line: cube position
+            Vector3 endPos = _ownerPoint.transform.position;
+
+            linkLine.positionCount = 2;
+            linkLine.SetPosition(0, startPos);
+            linkLine.SetPosition(1, endPos);
+            linkLine.enabled = true;
+        }
+        else if (linkLine != null)
+        {
+            linkLine.enabled = false;
+        }
     }
 
     public void Close()

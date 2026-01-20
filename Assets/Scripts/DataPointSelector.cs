@@ -124,6 +124,8 @@ public class DataPointSelector : MonoBehaviour
     /// </summary>
     private AircraftDetailCard CreateCard(AircraftDataPoint point)
     {
+
+        #region OldFunc
         if (detailCardPrefab == null)
         {
             Debug.LogWarning("[DataPointSelector] No DetailCard prefab assigned.");
@@ -151,6 +153,7 @@ public class DataPointSelector : MonoBehaviour
         }
 
         return card;
+        #endregion
     }
 
     public void OnCardClosed(AircraftDetailCard card, AircraftDataPoint point)
