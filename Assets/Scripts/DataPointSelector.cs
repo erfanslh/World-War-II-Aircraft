@@ -38,6 +38,9 @@ public class DataPointSelector : MonoBehaviour
         if (!_selectionEnabled)
             return;
 
+        if (AircraftModelDragger.AnyModelInGesture)
+            return;
+
 #if UNITY_EDITOR
         // --- Mouse click in Editor ---
         if (Input.GetMouseButtonDown(0))

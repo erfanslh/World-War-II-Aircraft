@@ -46,6 +46,10 @@ public class TapToPlaceRoot : MonoBehaviour
 
     private void Update()
     {
+        // If user is manipulating a 3D aircraft model, ignore touches for the plot
+        if (AircraftModelDragger.AnyModelInGesture)
+            return;
+
         int touchCount = Input.touchCount;
         if (touchCount == 0)
         {
