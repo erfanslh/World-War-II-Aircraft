@@ -116,7 +116,8 @@ MonoBehaviour:
     Height: 0
     WingArea: 0
     MaxSpeed: 0
-  pointRenderer: {fileID: 7373896177277453541}
+  pulseAmount: 0.15
+  pulseSpeed: 3
 --- !u!65 &8008847668514531624
 BoxCollider:
   m_ObjectHideFlags: 0

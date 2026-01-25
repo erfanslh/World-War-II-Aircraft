@@ -161,10 +161,10 @@ public class DataPointSelector : MonoBehaviour
 
     public void OnCardClosed(AircraftDetailCard card, AircraftDataPoint point)
     {
-        // Make sure this point is actually tracked
+        // 1) Clear highlight + dictionary entry if this point/card is tracked
         if (point != null && _openCards.TryGetValue(point, out var existingCard))
         {
-            // Only clear if the card we’re closing is the one we know about
+            // Only clear if the card we’re closing is the same one we stored
             if (existingCard == card)
             {
                 // stop breathing highlight
@@ -174,7 +174,17 @@ public class DataPointSelector : MonoBehaviour
                 _openCards.Remove(point);
             }
         }
+
+        // 2) Remove this card from the layout list
+        if (card != null)
+        {
+            _cardList.Remove(card);
+        }
+
+        // 3) Rebuild positions for the remaining cards
+        RepositionCards();
     }
+
 
     /// <summary>
     /// Arrange all open cards in a horizontal row in front of the camera (or
