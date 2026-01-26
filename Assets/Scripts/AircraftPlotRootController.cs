@@ -94,7 +94,11 @@ public class AircraftPlotRootController : MonoBehaviour
 
 
 
-
+    // to pass it into DetailCard
+    [HideInInspector] public List<AircraftRecord> lastFilteredRecords = new();
+    [HideInInspector] public NumericAttribute lastXAttr;
+    [HideInInspector] public NumericAttribute lastYAttr;
+    [HideInInspector] public NumericAttribute lastZAttr;
     // remember last mapping so filters can rebuild
     private NumericAttribute _lastXAttr;
     private NumericAttribute _lastYAttr;
@@ -132,7 +136,7 @@ public class AircraftPlotRootController : MonoBehaviour
         Debug.Log($"[AircraftPlotRootController] Country flag materials loaded: {_countryFlagMap.Count}");
     }
 
-    private string FormatAxisNumber(NumericAttribute attr, float value)
+    public static string FormatAxisNumber(NumericAttribute attr, float value)
     {
         switch (attr)
         {
@@ -254,6 +258,10 @@ public class AircraftPlotRootController : MonoBehaviour
             Debug.LogWarning("[AircraftPlotRootController] BuildPlot: one axis had no valid (>0) data.");
             return;
         }
+        lastFilteredRecords = filtered;
+        lastXAttr = xAttr;
+        lastYAttr = yAttr;
+        lastZAttr = zAttr;
 
         // labels get REAL min/max
         UpdateAxisLabels(xAttr, yAttr, zAttr, minX, maxX, minY, maxY, minZ, maxZ);
@@ -541,17 +549,6 @@ public class AircraftPlotRootController : MonoBehaviour
         if (yAxisNameLabel != null) yAxisNameLabel.text = yName;
         if (zAxisNameLabel != null) zAxisNameLabel.text = zName;
 
-        #region OldColde
-        // Min / Max numbers at ends of each axis
-        //if (xAxisMinLabel != null) xAxisMinLabel.text = $"{minX:0.#}";
-        //if (xAxisMaxLabel != null) xAxisMaxLabel.text = $"{maxX:0.#}";
-
-        //if (yAxisMinLabel != null) yAxisMinLabel.text = $"{minY:0.#}";
-        //if (yAxisMaxLabel != null) yAxisMaxLabel.text = $"{maxY:0.#}";
-
-        //if (zAxisMinLabel != null) zAxisMinLabel.text = $"{minZ:0.#}";
-        //if (zAxisMaxLabel != null) zAxisMaxLabel.text = $"{maxZ:0.#}";
-        #endregion
         if (xAxisMinLabel) xAxisMinLabel.text = FormatAxisNumber(xAttr, minX);
         if (xAxisMaxLabel) xAxisMaxLabel.text = FormatAxisNumber(xAttr, maxX);
 
@@ -584,4 +581,94 @@ public class AircraftPlotRootController : MonoBehaviour
         // round to one decimal if needed
         return $"{min:0.#} – {max:0.#}";
     }
+
+    // --- PUBLIC HELPERS FOR OTHER SCRIPTS (DetailCard etc.) ---
+
+    public bool TryGetCurrentAxes(out NumericAttribute x, out NumericAttribute y, out NumericAttribute z)
+    {
+        if (!_hasLastMapping)
+        {
+            x = y = z = NumericAttribute.ActiveSince;
+            return false;
+        }
+
+        x = _lastXAttr;
+        y = _lastYAttr;
+        z = _lastZAttr;
+        return true;
+    }
+
+    // You already have _records with all data; expose it read-only
+    public IReadOnlyList<AircraftRecord> GetAllRecords()
+    {
+        return _records;
+    }
+
+    #region Small_Analytic_Structure
+
+    public struct AxisStats
+    {
+        public bool valid;      // false if not enough data
+        public NumericAttribute attr;
+        public float value;     // this aircraft's value
+        public float min;       // group min
+        public float max;       // group max
+        public float normalized; // 0..1 position in that range
+    }
+
+    // Generic: compute stats for an attribute in a subset of records
+    private AxisStats ComputeAxisStats(
+        AircraftRecord target,
+        IEnumerable<AircraftRecord> group,
+        NumericAttribute attr)
+    {
+        AxisStats stats = new AxisStats
+        {
+            valid = false,
+            attr = attr,
+            value = GetValue(target, attr)
+        };
+
+        // Skip if target has non-positive value
+        if (stats.value <= 0f)
+            return stats;
+
+        float min = float.PositiveInfinity;
+        float max = float.NegativeInfinity;
+
+        foreach (var r in group)
+        {
+            float v = GetValue(r, attr);
+            if (v <= 0f) continue;
+
+            if (v < min) min = v;
+            if (v > max) max = v;
+        }
+
+        if (float.IsInfinity(min) || float.IsInfinity(max) || Mathf.Approximately(min, max))
+            return stats;
+
+        stats.min = min;
+        stats.max = max;
+        stats.normalized = Mathf.InverseLerp(min, max, stats.value);
+        stats.valid = true;
+        return stats;
+    }
+
+    // PUBLIC shortcuts the DetailCard can use
+    public AxisStats ComputeCountryAxisStats(AircraftRecord r, NumericAttribute attr)
+    {
+        var subset = _records.Where(x => x.Country == r.Country);
+        return ComputeAxisStats(r, subset, attr);
+    }
+
+    public AxisStats ComputeRoleAxisStats(AircraftRecord r, NumericAttribute attr)
+    {
+        var subset = _records.Where(x => x.PrimaryRole == r.PrimaryRole);
+        return ComputeAxisStats(r, subset, attr);
+    }
+
+
+    #endregion
+
 }
