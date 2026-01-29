@@ -119,9 +119,7 @@ public class AircraftModelDragger : MonoBehaviour
         }
     }
 
-    // =========================================================
     //  TOUCH (device) – drag + pinch + tap delete
-    // =========================================================
     private void HandleTouch()
     {
         if (mainCamera == null) return;
@@ -182,9 +180,8 @@ public class AircraftModelDragger : MonoBehaviour
         }
     }
 
-    // =========================================================
+
     //  CORE HELPERS
-    // =========================================================
     private bool HitThisModel(Ray ray)
     {
         if (Physics.Raycast(ray, out RaycastHit hit, 100f))

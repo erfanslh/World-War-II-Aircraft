@@ -42,8 +42,14 @@ public class AircraftDetailCard : MonoBehaviour
     private Canvas _canvas;           // world-space canvas on this prefab
 
     [Header("Link to selected cube")]
-    [SerializeField] private LineRenderer linkLine;   // line object on the card
-    [SerializeField] private Transform linkAnchor;    // where the line starts on the card
+    [SerializeField] public LineRenderer linkLine;   // line object on the card
+    [SerializeField] public Transform linkAnchor;    // where the line starts on the card
+
+    //public LineRenderer linkLine;
+    //public Transform linkAnchor;    // where on the card the line should connect
+
+    private Transform _linkTarget;  // the cube we’re linked to
+
 
     private AircraftDataPoint _ownerPoint;
     private DataPointSelector _selector;
@@ -77,6 +83,25 @@ public class AircraftDetailCard : MonoBehaviour
             _ => mediumColor
         };
     }
+
+    // Called by DataPointSelector right after creating the card
+    public void SetLinkTarget(Transform target)
+    {
+        _linkTarget = target;
+    }
+
+    // Called by DataPointSelector to give us the flag material of that cube
+    public void SetLinkMaterial(Material mat)
+    {
+        if (linkLine != null && mat != null)
+        {
+            linkLine.material = mat;
+            // optional: make sure the line isn’t super bright
+            linkLine.startColor = Color.white;
+            linkLine.endColor = Color.white;
+        }
+    }
+
 
     // Put this inside AircraftDetailCard, above BuildAxisRankLine for example
     private float ComputePercentile(
@@ -290,6 +315,18 @@ public class AircraftDetailCard : MonoBehaviour
             }
         }
     }
+    private void UpdateLinkLine()
+    {
+        if (linkLine == null || _linkTarget == null) return;
+
+        // point 0 = cube position
+        linkLine.SetPosition(0, _linkTarget.position);
+
+        // point 1 = just BEHIND the card, so the line doesn’t sit on top of it
+        Vector3 endPos = (linkAnchor != null ? linkAnchor.position : transform.position)
+                         - transform.forward * 0.01f;  // tiny offset behind card
+        linkLine.SetPosition(1, endPos);
+    }
 
 
     private void LateUpdate()
@@ -300,6 +337,7 @@ public class AircraftDetailCard : MonoBehaviour
         Transform camT = _camera.transform;
         transform.LookAt(camT.position, Vector3.up);
         transform.Rotate(0f, 180f, 0f, Space.Self);
+        UpdateLinkLine();
 
         // --- update line to the cube ---
         if (linkLine != null && _ownerPoint != null)
@@ -338,8 +376,8 @@ public class AircraftDetailCard : MonoBehaviour
     // Turn normalized 0..1 into "low / medium / high"
     private string DescribeLevel(float normalized)
     {
-        if (normalized >= 0.66f) return "<color=#00FF00>high</color>";    // green
-        if (normalized >= 0.33f) return "<color=#FFFF00>medium</color>";  // yellow
+        if (normalized >= 0.66f) return "<color=#006400>high</color>";    // green
+        if (normalized >= 0.33f) return "<color=#8B8000>medium</color>";  // yellow
         return "<color=#FF0000>low</color>";                               // red
     }
 
