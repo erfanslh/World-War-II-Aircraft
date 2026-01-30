@@ -75,19 +75,6 @@ public class DataPointSelector : MonoBehaviour
         }
 #endif
     }
-    #region oldcode
-    //private void HandleRay(Ray ray)
-    //{
-    //    if (Physics.Raycast(ray, out RaycastHit hit, 100f))
-    //    {
-    //        var dataPoint = hit.collider.GetComponentInParent<AircraftDataPoint>();
-    //        if (dataPoint != null && dataPoint.record != null)
-    //        {
-    //            ToggleSelection(dataPoint);
-    //        }
-    //    }
-    //}
-    #endregion
 
     private void HandleRay(Ray ray)
     {
@@ -142,6 +129,7 @@ public class DataPointSelector : MonoBehaviour
             _openCards[point] = newCard;
             _cardList.Add(newCard);
             RepositionCards();
+            RecomputeSelectionSummary();
         }
     }
 
@@ -189,164 +177,26 @@ public class DataPointSelector : MonoBehaviour
 
     public void OnCardClosed(AircraftDetailCard card, AircraftDataPoint point)
     {
-        // 1) Clear highlight + dictionary entry if this point/card is tracked
-        if (point != null && _openCards.TryGetValue(point, out var existingCard))
+        // 1) clear highlight + dictionary entry if tracked
+    if (point != null && _openCards.TryGetValue(point, out var existingCard))
+    {
+        if (existingCard == card)
         {
-            // Only clear if the card we’re closing is the same one we stored
-            if (existingCard == card)
-            {
-                // stop breathing highlight
-                point.SetHighlighted(false);
-
-                // forget this selection
-                _openCards.Remove(point);
-            }
+            point.SetHighlighted(false);
+            _openCards.Remove(point);
         }
-
-        // 2) Remove this card from the layout list
-        if (card != null)
-        {
-            _cardList.Remove(card);
-        }
-
-        // 3) Rebuild positions for the remaining cards
-        RepositionCards();
     }
 
-    #region V 1.0  RepositionCard
+    // 2) remove from layout list
+    if (card != null)
+    {
+        _cardList.Remove(card);
+    }
 
-    //private void RepositionCards()
-    //{
-    //    if (_cardList.Count == 0)
-    //        return;
-
-    //    Transform camT = mainCamera != null ? mainCamera.transform : Camera.main?.transform;
-    //    if (camT == null) return;
-
-    //    Vector3 center;
-    //    Vector3 rightDir;
-
-    //    var plot = AircraftPlotRootController.Instance;
-    //    if (plot != null)
-    //    {
-    //        Transform plotT = plot.transform;
-
-    //        // world-space center of the plot
-    //        var localCenter = new Vector3(plot.width * 0.5f,
-    //                                      plot.height * 0.5f,
-    //                                      plot.depth * 0.5f);
-    //        Vector3 plotCenter = plotT.TransformPoint(localCenter);
-
-    //        Vector3 camToPlot = plotCenter - camT.position;
-    //        if (camToPlot.sqrMagnitude < 0.0001f)
-    //            camToPlot = camT.forward;
-
-    //        Vector3 dir = camToPlot.normalized;
-
-    //        float extraDistance = Mathf.Max(plot.width, plot.depth) * 0.7f;
-    //        Vector3 baseCenter = plotCenter + dir * extraDistance;
-
-    //        // 🔹 keep X/Z behind the plot, but Y locked to camera (eye level)
-    //        center = new Vector3(baseCenter.x, camT.position.y, baseCenter.z);
-
-    //        // horizontal direction (sideways) for card row
-    //        rightDir = Vector3.Cross(Vector3.up, dir);
-    //        if (rightDir.sqrMagnitude < 0.0001f)
-    //            rightDir = camT.right;
-    //        else
-    //            rightDir.Normalize();
-    //    }
-    //    else if (cardRowOrigin != null)
-    //    {
-    //        center = cardRowOrigin.position;
-    //        // also force it to camera height so it’s not too low/high
-    //        center.y = camT.position.y;
-    //        rightDir = cardRowOrigin.right;
-    //    }
-    //    else
-    //    {
-    //        float distance = 0.9f;
-    //        center = camT.position + camT.forward * distance;
-    //        // this already has camera.y so no extra change needed
-    //        rightDir = camT.right;
-    //    }
-
-    //    float spacing = 0.45f;
-    //    int n = _cardList.Count;
-    //    float startOffset = -(n - 1) * 0.5f * spacing;
-
-    //    for (int i = 0; i < n; i++)
-    //    {
-    //        var card = _cardList[i];
-    //        if (card == null) continue;
-
-    //        Vector3 targetPos = center + rightDir * (startOffset + i * spacing);
-    //        card.transform.position = targetPos;
-
-    //        // face camera
-    //        card.transform.LookAt(camT.position, Vector3.up);
-    //        card.transform.Rotate(0f, 180f, 0f, Space.Self);
-    //    }
-    //}
-
-    #endregion
-
-    /// <summary>
-    /// Arrange all open cards on a horizontal arc (equator) around the user.
-    /// Cards are placed at a fixed radius, at roughly eye height, in the
-    /// front hemisphere only.
-    /// </summary>
-    #region V2.0 RepositionCard
-    //private void RepositionCards()
-    //{
-    //    if (_cardList.Count == 0)
-    //        return;
-
-    //    Transform camT = mainCamera != null ? mainCamera.transform : Camera.main.transform;
-    //    if (camT == null)
-    //        return;
-
-    //    int n = _cardList.Count;
-
-    //    // -------- layout parameters you can tweak --------
-    //    float radius = 1.0f;          // distance of cards from the head
-    //    float eyeHeightOffset = 0.0f; // 0 = same Y as camera, positive = slightly above
-    //    float maxAngleDeg = 90f;      // spread across -maxAngle .. +maxAngle in front
-
-    //    // Define a horizontal plane using camera forward/right projected on world-up
-    //    Vector3 forwardFlat = Vector3.ProjectOnPlane(camT.forward, Vector3.up).normalized;
-    //    if (forwardFlat.sqrMagnitude < 0.0001f)
-    //        forwardFlat = camT.forward;
-
-    //    Vector3 rightFlat = Vector3.ProjectOnPlane(camT.right, Vector3.up).normalized;
-
-    //    // The “equator” center is basically the camera position (plus optional offset)
-    //    Vector3 center = camT.position + Vector3.up * eyeHeightOffset;
-
-    //    for (int i = 0; i < n; i++)
-    //    {
-    //        var card = _cardList[i];
-    //        if (card == null) continue;
-
-    //        // t = 0..1 along the set of cards => map to -maxAngle..+maxAngle
-    //        float t = (n <= 1) ? 0.5f : (float)i / (n - 1);
-    //        float angleDeg = Mathf.Lerp(-maxAngleDeg, maxAngleDeg, t);
-    //        float angleRad = angleDeg * Mathf.Deg2Rad;
-
-    //        // Direction on the horizontal plane
-    //        Vector3 dir =
-    //            forwardFlat * Mathf.Cos(angleRad) +
-    //            rightFlat * Mathf.Sin(angleRad);
-
-    //        Vector3 targetPos = center + dir * radius;
-    //        card.transform.position = targetPos;
-
-    //        // Make sure card faces the camera
-    //        card.transform.LookAt(camT.position, Vector3.up);
-    //        card.transform.Rotate(0f, 180f, 0f, Space.Self);
-    //    }
-    //}
-    #endregion
+    // 3) update layout + summaries for remaining cards
+    RepositionCards();
+    RecomputeSelectionSummary();
+    }
 
     private void RepositionCards()
     {
@@ -422,6 +272,181 @@ public class DataPointSelector : MonoBehaviour
 
         _openCards.Clear();
         _cardList.Clear();
+    }
+
+    // ============================================================
+    //  SELECTION-ONLY COMPARISON SUMMARY
+    // ============================================================
+    private void RecomputeSelectionSummary()
+    {
+        var controller = AircraftPlotRootController.Instance;
+        if (controller == null)
+            return;
+
+        if (_openCards.Count == 0)
+            return;
+
+        // Which axes are currently used by the plot?
+        if (!controller.TryGetCurrentAxes(out var xAttr, out var yAttr, out var zAttr))
+        {
+            // No active mapping => clear selection summaries
+            foreach (var kvp in _openCards)
+            {
+                var card = kvp.Value;
+                if (card != null)
+                    card.SetSelectionSummary("");
+            }
+            return;
+        }
+
+        int total = _openCards.Count;
+
+        // If only one card is open, just show a hint
+        if (total < 2)
+        {
+            foreach (var kvp in _openCards)
+            {
+                var card = kvp.Value;
+                if (card != null)
+                    card.SetSelectionSummary("Select multiple aircraft to compare them here.");
+            }
+            return;
+        }
+
+        // Build ranks per axis (1 = highest value)
+        var rankX = BuildAxisRanks(xAttr);
+        var rankY = BuildAxisRanks(yAttr);
+        var rankZ = BuildAxisRanks(zAttr);
+
+        // Update each open card
+        foreach (var kvp in _openCards)
+        {
+            var point = kvp.Key;
+            var card = kvp.Value;
+            if (point == null || card == null || point.record == null)
+                continue;
+
+            string summary = BuildCardSummaryText(
+                point,
+                total,
+                xAttr, yAttr, zAttr,
+                rankX, rankY, rankZ
+            );
+
+            card.SetSelectionSummary(summary);
+        }
+    }
+
+    private Dictionary<AircraftDataPoint, int> BuildAxisRanks(NumericAttribute attr)
+    {
+        var result = new Dictionary<AircraftDataPoint, int>();
+        var list = new List<(AircraftDataPoint point, float val)>();
+
+        foreach (var kvp in _openCards)
+        {
+            var p = kvp.Key;
+            if (p == null || p.record == null) continue;
+
+            float v = AircraftPlotRootController.GetValue(p.record, attr);
+            list.Add((p, v));
+        }
+
+        // Higher value -> smaller rank number (1 = biggest)
+        list.Sort((a, b) => b.val.CompareTo(a.val));
+
+        for (int i = 0; i < list.Count; i++)
+        {
+            result[list[i].point] = i + 1;
+        }
+
+        return result;
+    }
+
+    private string BuildCardSummaryText(
+        AircraftDataPoint point,
+        int total,
+        NumericAttribute xAttr,
+        NumericAttribute yAttr,
+        NumericAttribute zAttr,
+        Dictionary<AircraftDataPoint, int> rankX,
+        Dictionary<AircraftDataPoint, int> rankY,
+        Dictionary<AircraftDataPoint, int> rankZ)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine($"Comparing {total} selected aircraft:");
+
+        AppendAxisLine(sb, point, xAttr, rankX, total);
+        AppendAxisLine(sb, point, yAttr, rankY, total);
+        AppendAxisLine(sb, point, zAttr, rankZ, total);
+
+        return sb.ToString();
+    }
+
+    private void AppendAxisLine(
+        System.Text.StringBuilder sb,
+        AircraftDataPoint point,
+        NumericAttribute attr,
+        Dictionary<AircraftDataPoint, int> rankMap,
+        int total)
+    {
+        if (!rankMap.TryGetValue(point, out int rank))
+            return;
+
+        string axisName = AxisDisplayName(attr);
+        string ordinal = ToOrdinal(rank);
+
+        // Color code: 1st = green, last = red, others = amber
+        string color;
+        string suffix;
+        if (rank == 1)
+        {
+            color = "#4CAF50"; // dark green
+            suffix = " (highest)";
+        }
+        else if (rank == total)
+        {
+            color = "#F44336"; // red
+            suffix = " (lowest)";
+        }
+        else
+        {
+            color = "#FFC107"; // amber
+            suffix = "";
+        }
+
+        sb.AppendLine(
+            $"• {axisName}: <color={color}>{ordinal} of {total}{suffix}</color>");
+    }
+
+    private static string AxisDisplayName(NumericAttribute attr)
+    {
+        switch (attr)
+        {
+            case NumericAttribute.ActiveSince: return "Active Since";
+            case NumericAttribute.MaxSpeed: return "Max Speed";
+            case NumericAttribute.Number: return "Number Built";
+            case NumericAttribute.Wingspan: return "Wingspan";
+            case NumericAttribute.Length: return "Length";
+            case NumericAttribute.Crew: return "Crew";
+            default: return attr.ToString();
+        }
+    }
+
+    private static string ToOrdinal(int n)
+    {
+        if (n <= 0) return n.ToString();
+
+        int rem100 = n % 100;
+        if (rem100 >= 11 && rem100 <= 13)
+            return n + "th";
+
+        switch (n % 10)
+        {
+            case 1: return n + "st";
+            case 2: return n + "nd";
+            case 3: return n + "rd";
+            default: return n + "th";
+        }
     }
 
 

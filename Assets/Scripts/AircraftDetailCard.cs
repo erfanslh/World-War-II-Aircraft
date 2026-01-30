@@ -25,6 +25,7 @@ public class AircraftDetailCard : MonoBehaviour
     public TMP_Text maxSpeedText;
 
     [Header("Axis-focused summary")]
+    public TMP_Text selectionSummaryText;
     public TMP_Text axesSummaryText;
     public TMP_Text countrySummaryText;
     public TMP_Text roleSummaryText;
@@ -45,11 +46,9 @@ public class AircraftDetailCard : MonoBehaviour
     [SerializeField] public LineRenderer linkLine;   // line object on the card
     [SerializeField] public Transform linkAnchor;    // where the line starts on the card
 
-    //public LineRenderer linkLine;
-    //public Transform linkAnchor;    // where on the card the line should connect
-
     private Transform _linkTarget;  // the cube we’re linked to
 
+    public AircraftRecord Record { get; private set; }
 
     private AircraftDataPoint _ownerPoint;
     private DataPointSelector _selector;
@@ -195,6 +194,7 @@ public class AircraftDetailCard : MonoBehaviour
     {
         if (r == null) return;
 
+        Record = r;
         _camera = cam;
 
         // ----- Text fields (already have this) -----
@@ -317,6 +317,15 @@ public class AircraftDetailCard : MonoBehaviour
             }
         }
     }
+
+    public void SetSelectionSummary(string text)
+    {
+        if (selectionSummaryText != null)
+            selectionSummaryText.text = string.IsNullOrEmpty(text)
+                ? ""
+                : text;
+    }
+
     private void UpdateLinkLine()
     {
         if (linkLine == null || _linkTarget == null) return;
@@ -431,13 +440,13 @@ public class AircraftDetailCard : MonoBehaviour
             string formattedVal = AircraftPlotRootController.FormatAxisNumber(s.attr, s.value);
 
             sb.AppendLine(
-                $"{axisLetter} ({GetAttributeDisplayName(s.attr)}): " +
+                $"{axisLetter}• {GetAttributeDisplayName(s.attr)}: " +
                 $"<color=#{hexColor}>{formattedVal} {rankWord}</color>");
         }
 
-        AppendAxis('X', x);
-        AppendAxis('Y', y);
-        AppendAxis('Z', z);
+        AppendAxis(' ', x);
+        AppendAxis(' ', y);
+        AppendAxis(' ', z);
 
         return sb.ToString();
     }

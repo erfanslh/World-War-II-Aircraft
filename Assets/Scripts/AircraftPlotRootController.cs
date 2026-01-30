@@ -104,7 +104,6 @@ public class AircraftPlotRootController : MonoBehaviour
     private NumericAttribute _lastYAttr;
     private NumericAttribute _lastZAttr;
     private bool _hasLastMapping;
-
     private void Awake()
     {
         Instance = this;
@@ -582,8 +581,7 @@ public class AircraftPlotRootController : MonoBehaviour
         return $"{min:0.#} – {max:0.#}";
     }
 
-    // --- PUBLIC HELPERS FOR OTHER SCRIPTS (DetailCard etc.) ---
-
+    // Get Axes
     public bool TryGetCurrentAxes(out NumericAttribute x, out NumericAttribute y, out NumericAttribute z)
     {
         if (!_hasLastMapping)
