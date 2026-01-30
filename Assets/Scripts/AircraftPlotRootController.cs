@@ -479,7 +479,6 @@ public class AircraftPlotRootController : MonoBehaviour
     }
     private enum AxisType { X, Y, Z }
 
-    // Creates one tick + label at given local position for a single axis
     private void CreateAxisTickWithLabel(Vector3 localPos, AxisType axis, float rawValue)
     {
         if (axisTickPrefab == null) return;
@@ -488,29 +487,33 @@ public class AircraftPlotRootController : MonoBehaviour
         var tickGO = Instantiate(axisTickPrefab, transform);
         tickGO.transform.localPosition = localPos;
 
-        // A small vertical “post”
-        tickGO.transform.localScale = new Vector3(0.01f, 0.05f, 0.01f);
-
-        // Offset so ticks don’t hide inside axes/floor
+        // Default: vertical post (for X and Z axes)
+        Vector3 tickScale = new Vector3(0.01f, 0.05f, 0.01f);
         Vector3 labelOffset;
+
         switch (axis)
         {
             case AxisType.X:
-                tickGO.transform.localPosition += new Vector3(0f, 0.01f, 0f);  // a bit above floor
+                // small vertical post just above the floor
+                tickGO.transform.localPosition += new Vector3(0f, 0.01f, 0f);
                 labelOffset = new Vector3(0f, 0.03f, 0f);
                 break;
 
             case AxisType.Y:
-                tickGO.transform.localPosition += new Vector3(0.02f, 0f, 0f);   // stick out in +X
-                labelOffset = new Vector3(0.04f, 0f, 0f);
+                // horizontal bar sticking out in +X, i.e. perpendicular to Y axis
+                tickScale = new Vector3(0.05f, 0.01f, 0.01f);
+                tickGO.transform.localPosition += new Vector3(0.01f, 0f, 0f);
+                labelOffset = new Vector3(0.06f, 0f, 0f);
                 break;
 
-            default: // Z
+            default: // AxisType.Z
+                     // vertical post above the floor
                 tickGO.transform.localPosition += new Vector3(0f, 0.01f, 0f);
                 labelOffset = new Vector3(0f, 0.03f, 0f);
                 break;
         }
 
+        tickGO.transform.localScale = tickScale;
         _spawnedAxisTicks.Add(tickGO);
 
         // ---- Numeric label ----
@@ -520,16 +523,71 @@ public class AircraftPlotRootController : MonoBehaviour
         label.text = FormatAxisNumber(rawValue);
         label.transform.localPosition = tickGO.transform.localPosition + labelOffset;
 
-        // Make label face the camera
+        // Make label face the camera and nudge it slightly toward the camera
         Camera cam = axisLabelCamera != null ? axisLabelCamera : Camera.main;
         if (cam != null)
         {
-            label.transform.LookAt(cam.transform);
+            label.transform.LookAt(cam.transform.position, Vector3.up);
             label.transform.Rotate(0f, 180f, 0f, Space.Self);
+
+            // After the 180° flip, -forward points toward the camera
+            label.transform.position -= label.transform.forward * 0.01f;
         }
 
         _spawnedAxisLabels.Add(label.gameObject);
     }
+
+    // Creates one tick + label at given local position for a single axis
+    //private void CreateAxisTickWithLabel(Vector3 localPos, AxisType axis, float rawValue)
+    //{
+    //    if (axisTickPrefab == null) return;
+
+    //    // ---- Tick cube ----
+    //    var tickGO = Instantiate(axisTickPrefab, transform);
+    //    tickGO.transform.localPosition = localPos;
+
+    //    // A small vertical “post”
+    //    tickGO.transform.localScale = new Vector3(0.01f, 0.05f, 0.01f);
+
+    //    // Offset so ticks don’t hide inside axes/floor
+    //    Vector3 labelOffset;
+    //    switch (axis)
+    //    {
+    //        case AxisType.X:
+    //            tickGO.transform.localPosition += new Vector3(0f, 0.01f, 0f);  // a bit above floor
+    //            labelOffset = new Vector3(0f, 0.03f, 0f);
+    //            break;
+
+    //        case AxisType.Y:
+    //            tickGO.transform.localPosition += new Vector3(0.02f, 0f, 0f);   // stick out in +X
+    //            labelOffset = new Vector3(0.04f, 0f, 0f);
+    //            break;
+
+    //        default: // Z
+    //            tickGO.transform.localPosition += new Vector3(0f, 0.01f, 0f);
+    //            labelOffset = new Vector3(0f, 0.03f, 0f);
+    //            break;
+    //    }
+
+    //    _spawnedAxisTicks.Add(tickGO);
+
+    //    // ---- Numeric label ----
+    //    if (axisLabelPrefab == null) return;
+
+    //    TMP_Text label = Instantiate(axisLabelPrefab, transform);
+    //    label.text = FormatAxisNumber(rawValue);
+    //    label.transform.localPosition = tickGO.transform.localPosition + labelOffset;
+
+    //    // Make label face the camera
+    //    Camera cam = axisLabelCamera != null ? axisLabelCamera : Camera.main;
+    //    if (cam != null)
+    //    {
+    //        label.transform.LookAt(cam.transform);
+    //        label.transform.Rotate(0f, 180f, 0f, Space.Self);
+    //    }
+
+    //    _spawnedAxisLabels.Add(label.gameObject);
+    //}
 
     #endregion
 
