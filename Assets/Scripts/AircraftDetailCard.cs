@@ -53,12 +53,14 @@ public class AircraftDetailCard : MonoBehaviour
 
     private AircraftDataPoint _ownerPoint;
     private DataPointSelector _selector;
+    public AircraftDataPoint OwnerPoint => _ownerPoint;
+
 
     //Define Colors for Values
     [Header("Axis rank colors")]
     public Color lowColor = new Color(0.85f, 0.25f, 0.25f);  // red-ish
-    public Color mediumColor = new Color(0.95f, 0.8f, 0.25f);  // yellow-ish
-    public Color highColor = new Color(0.25f, 0.85f, 0.25f);  // green-ish
+    public Color mediumColor = new Color(0.8f, 0.6f, 0.0f);  // yellow-ish
+    public Color highColor = new Color(0.0f, 0.5f, 0.0f);  // green-ish
 
     private Color GetRankColor(RankBand band)
     {
@@ -71,8 +73,8 @@ public class AircraftDetailCard : MonoBehaviour
         if (allBlack)
         {
             lowColor = new Color(0.85f, 0.25f, 0.25f);  // red-ish
-            mediumColor = new Color(0.95f, 0.80f, 0.25f);  // yellow-ish
-            highColor = new Color(0.25f, 0.85f, 0.25f);  // green-ish
+            mediumColor = new Color(0.8f, 0.6f, 0.0f);  // yellow-ish
+            highColor = new Color(0.0f, 0.5f, 0.0f);  // green-ish
         }
 
         return band switch
