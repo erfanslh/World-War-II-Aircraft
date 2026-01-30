@@ -50,6 +50,9 @@ public class AircraftDetailCard : MonoBehaviour
 
     public AircraftRecord Record { get; private set; }
 
+    // remember which aircraft this card represents
+    private AircraftRecord _record;
+
     private AircraftDataPoint _ownerPoint;
     private DataPointSelector _selector;
     public AircraftDataPoint OwnerPoint => _ownerPoint;
@@ -316,6 +319,7 @@ public class AircraftDetailCard : MonoBehaviour
                     xRole, yRole, zRole);
             }
         }
+
     }
 
     public void SetSelectionSummary(string text)

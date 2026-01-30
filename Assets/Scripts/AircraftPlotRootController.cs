@@ -479,6 +479,7 @@ public class AircraftPlotRootController : MonoBehaviour
     }
     private enum AxisType { X, Y, Z }
 
+    #region axess tick and label creation
     private void CreateAxisTickWithLabel(Vector3 localPos, AxisType axis, float rawValue)
     {
         if (axisTickPrefab == null) return;
@@ -536,60 +537,10 @@ public class AircraftPlotRootController : MonoBehaviour
 
         _spawnedAxisLabels.Add(label.gameObject);
     }
-
-    // Creates one tick + label at given local position for a single axis
-    //private void CreateAxisTickWithLabel(Vector3 localPos, AxisType axis, float rawValue)
-    //{
-    //    if (axisTickPrefab == null) return;
-
-    //    // ---- Tick cube ----
-    //    var tickGO = Instantiate(axisTickPrefab, transform);
-    //    tickGO.transform.localPosition = localPos;
-
-    //    // A small vertical “post”
-    //    tickGO.transform.localScale = new Vector3(0.01f, 0.05f, 0.01f);
-
-    //    // Offset so ticks don’t hide inside axes/floor
-    //    Vector3 labelOffset;
-    //    switch (axis)
-    //    {
-    //        case AxisType.X:
-    //            tickGO.transform.localPosition += new Vector3(0f, 0.01f, 0f);  // a bit above floor
-    //            labelOffset = new Vector3(0f, 0.03f, 0f);
-    //            break;
-
-    //        case AxisType.Y:
-    //            tickGO.transform.localPosition += new Vector3(0.02f, 0f, 0f);   // stick out in +X
-    //            labelOffset = new Vector3(0.04f, 0f, 0f);
-    //            break;
-
-    //        default: // Z
-    //            tickGO.transform.localPosition += new Vector3(0f, 0.01f, 0f);
-    //            labelOffset = new Vector3(0f, 0.03f, 0f);
-    //            break;
-    //    }
-
-    //    _spawnedAxisTicks.Add(tickGO);
-
-    //    // ---- Numeric label ----
-    //    if (axisLabelPrefab == null) return;
-
-    //    TMP_Text label = Instantiate(axisLabelPrefab, transform);
-    //    label.text = FormatAxisNumber(rawValue);
-    //    label.transform.localPosition = tickGO.transform.localPosition + labelOffset;
-
-    //    // Make label face the camera
-    //    Camera cam = axisLabelCamera != null ? axisLabelCamera : Camera.main;
-    //    if (cam != null)
-    //    {
-    //        label.transform.LookAt(cam.transform);
-    //        label.transform.Rotate(0f, 180f, 0f, Space.Self);
-    //    }
-
-    //    _spawnedAxisLabels.Add(label.gameObject);
-    //}
+    #endregion
 
     #endregion
+
 
     private void UpdateAxisLabels(
     NumericAttribute xAttr, NumericAttribute yAttr, NumericAttribute zAttr,

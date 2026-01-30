@@ -48,9 +48,41 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -8379094311327840638, guid: 016b17e0a3dfebf45b226e35d189fd09, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
+    - target: {fileID: -6685812699471572139, guid: 016b17e0a3dfebf45b226e35d189fd09, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
+    - target: {fileID: -3150296019531232248, guid: 016b17e0a3dfebf45b226e35d189fd09, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
+    - target: {fileID: -2848417174590486526, guid: 016b17e0a3dfebf45b226e35d189fd09, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
+    - target: {fileID: -2150722282226160021, guid: 016b17e0a3dfebf45b226e35d189fd09, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
+    - target: {fileID: 678133496955699894, guid: 016b17e0a3dfebf45b226e35d189fd09, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 016b17e0a3dfebf45b226e35d189fd09, type: 3}
       propertyPath: m_Name
       value: Ki-59
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 016b17e0a3dfebf45b226e35d189fd09, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
+    - target: {fileID: 7050702598599032331, guid: 016b17e0a3dfebf45b226e35d189fd09, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -84,5 +116,5 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
+  m_Size: {x: 15.71, y: 9.7, z: 13.64}
   m_Center: {x: 0, y: 0, z: 0}

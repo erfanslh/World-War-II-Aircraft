@@ -9,6 +9,9 @@ public class AircraftModelDragger : MonoBehaviour
     public Camera mainCamera;
     public ARRaycastManager raycastManager;
 
+    [Header("Owner")]
+    public AircraftDetailCard ownerCard;
+
     [Header("Drag start")]
     [Tooltip("Hold time (seconds) before we force drag start. Drag can also start earlier if you move your finger.")]
     public float longPressTime = 0.35f;
@@ -73,9 +76,7 @@ public class AircraftModelDragger : MonoBehaviour
 #endif
     }
 
-    // =========================================================
-    //  MOUSE (Editor) – simple long-press drag
-    // =========================================================
+    //  – simple long-press drag
     private void HandleMouse()
     {
         if (mainCamera == null) return;
@@ -115,11 +116,11 @@ public class AircraftModelDragger : MonoBehaviour
 
         if (_isPressing && Input.GetMouseButtonUp(0))
         {
-            EndPress();   // in editor we don’t use tap-to-delete
+            EndPress(false);   // in editor we don’t use tap-to-delete
         }
     }
 
-    //  TOUCH (device) – drag + pinch + tap delete
+    //  TOUCH  – drag + pinch + tap delete
     private void HandleTouch()
     {
         if (mainCamera == null) return;
@@ -174,7 +175,17 @@ public class AircraftModelDragger : MonoBehaviour
                 }
                 else if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled)
                 {
-                    EndPress();
+                    float pressDuration = Time.time - _pressStartTime;
+                    float totalMovement = Vector2.Distance(_pressStartPos, _lastTouchPos);
+
+                    bool treatAsTap =
+                        tapDeletesModel &&
+                        !_dragStarted &&          // never transitioned to drag
+                        !_hadMultiTouch &&        // was not a pinch/rotate
+                        pressDuration <= tapMaxTime &&
+                        totalMovement <= tapMaxMovement;
+
+                    EndPress(treatAsTap);
                 }
             }
         }
@@ -192,19 +203,7 @@ public class AircraftModelDragger : MonoBehaviour
         return false;
     }
 
-    private void BeginDrag()
-    {
-        _dragStarted = true;
-        _isDragging = true;
-        AnyModelInGesture = true;
 
-        // detach from detail card so it becomes an AR object
-        transform.SetParent(null, true);
-
-        _pinchActive = false;
-
-        Debug.Log("[AircraftModelDragger] Begin drag: " + gameObject.name);
-    }
 
     private void UpdateDrag(Vector2 screenPos)
     {
@@ -283,16 +282,9 @@ public class AircraftModelDragger : MonoBehaviour
         return Mathf.Atan2(dir.x, dir.y) * Mathf.Rad2Deg;
     }
 
-    private void EndPress()
+    private void EndPress(bool treatAsTap)
     {
-        bool wasTap =
-            !_dragStarted &&
-            !_hadMultiTouch &&
-            tapDeletesModel &&
-            (Time.time - _pressStartTime <= tapMaxTime) &&
-            (Vector2.Distance(_pressStartPos, _lastTouchPos) <= tapMaxMovement);
-
-        if (wasTap)
+        if (treatAsTap)
         {
             Debug.Log("[AircraftModelDragger] Tap => destroy model: " + gameObject.name);
             Destroy(gameObject);
@@ -308,8 +300,25 @@ public class AircraftModelDragger : MonoBehaviour
         _pinchActive = false;
         _fingerId = -1;
         _pressStartTime = 0f;
-        _hadMultiTouch = false;
+        _pressStartPos = Vector2.zero;
 
         AnyModelInGesture = false;
     }
+
+
+    private void BeginDrag()
+    {
+        _dragStarted = true;
+        _isDragging = true;
+        AnyModelInGesture = true;
+
+        // existing line – keep it:
+        transform.SetParent(null, true);
+
+        _pinchActive = false;
+        Debug.Log("[AircraftModelDragger] Begin drag: " + gameObject.name);
+    }
+
+
 }
+

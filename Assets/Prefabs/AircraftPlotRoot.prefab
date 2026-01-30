@@ -241,6 +241,10 @@ MonoBehaviour:
   allowedCountries: []
   allowedRoles: []
   allowedStates: []
+  lastFilteredRecords: []
+  lastXAttr: 0
+  lastYAttr: 0
+  lastZAttr: 0
 --- !u!1 &2058086887354974099
 GameObject:
   m_ObjectHideFlags: 0

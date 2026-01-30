@@ -36,11 +36,14 @@ public class DataPointSelector : MonoBehaviour
 
     private void Update()
     {
+        if (AircraftModelDragger.AnyModelInGesture)
+            return;
+
         if (!_selectionEnabled)
             return;
 
-        if (AircraftModelDragger.AnyModelInGesture)
-            return;
+        //if (AircraftModelDragger.AnyModelInGesture)
+        //    return;
 
 #if UNITY_EDITOR
         // --- Mouse click in Editor ---

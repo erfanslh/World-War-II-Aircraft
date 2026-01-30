@@ -34,11 +34,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0d749616093edf947bd362acecda91ab, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0d749616093edf947bd362acecda91ab, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
+      value: -90
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0d749616093edf947bd362acecda91ab, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
@@ -51,6 +51,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 0d749616093edf947bd362acecda91ab, type: 3}
       propertyPath: m_Name
       value: F4U Corsair
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 0d749616093edf947bd362acecda91ab, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -84,5 +88,5 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 15383.44, y: 19148.195, z: 6676.2466}
-  m_Center: {x: 0, y: 0, z: 3335.531}
+  m_Size: {x: 8.77, y: 10.15, z: 4.92}
+  m_Center: {x: 0, y: 0, z: 1.18}
